@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Califica tus grupos musicales favoritos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #dfc1e3; 
+        }
+        .custom-container {
+            max-width: 500px; /* Ancho máximo del contenedor */
+            max-height: 500px;
+        }
+        .form-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 7px;
+        }
+        .form-group label {
+            flex: 0 0 30%; /* Ancho fijo para las etiquetas */
+            text-align:left; /* Alinear texto de las etiquetas a la derecha */
+            margin-right: 15px; /* Espacio entre etiqueta y campo de entrada */
+            background-color: pink;
+            padding: 2px;
+            border-radius: 5px;
+        }
+        .form-group input {
+            flex: 0 0 50%; /* Ancho flexible para los campos de entrada */
+        }
+    </style>
+</head>
+<body class="d-flex justify-content-center align-items-center vh-100">
+    <div class="container bg-white p-4 rounded-lg shadow custom-container">
+        <h1 class="text-center mb-4">Califica tus grupos musicales favoritos</h1>
+        <div id="bandsList" ></div> <!-- Contenedor para la lista de bandas -->
+        <button onclick="procesarInformacion()" class="btn btn-outline-danger btn-block mt-4" style="background-color: pink;">Procesar información</button> <!-- Botón para procesar información -->
+    </div>
+   <!-- Enlace d TensorFlow -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.0.0/dist/tf.min.js"></script>
+    <script>
+        const bands = [ //Lista de grupos musicales 
+            'Soda Stereo',
+            'Astro',
+            'Los chaques',
+            'Los Angeles Azules',
+            'Airbag',
+            'Miranda!',
+            'Los Auténticos Decadentes',
+        ];
+        const features = [ //Lista de generos musicales
+            'Rock',
+            'kpop',
+            'Cumbia',
+            'Cumbia',
+            'Pop/Rock',
+            'Pop/Rock',
+        ];
+
+        const band_feats = tf.tensor([//Tensor de características de las bandas
+            [1, 1, 0, 0, 0, 0],
+            [1, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 1, 0],
+            [0, 0, 0, 1, 0, 0],
+            [0, 0, 1, 0, 0, 1],
+            [0, 0, 1, 0, 0, 1],
+            [1, 1, 0, 0, 0, 0],
+        ]);
+  
+        //Función para mostrar la lista de bandas
+        function mostrarBands() {
+            const bandsList = document.getElementById('bandsList');
+            bands.forEach((band, index) => {
+                const bandElement = document.createElement('div');
+                bandElement.className = 'form-group'; //Creación de un grupo de elementos
+                //Etiqueta para la banda
+                bandElement.innerHTML = `
+                    <label for="rating${index}">${band}</label> 
+                    <input type="number" id="rating${index}" class="form-control" min="1" max="10">
+                `;//Campo de entrada para calificar
+                bandsList.appendChild(bandElement); //Agregar el grupo de elementos a la lista de bandas 
+            });
+        }
+
+        //Función para procesar la información ingresada 
+        function procesarInformacion() {
+            const user_votes = [];
+            bands.forEach((band, index) => { //Recorrer cada banda 
+                const rating = parseFloat(document.getElementById(`rating${index}`).value); //Obtener la calificación ingresada
+                user_votes.push(rating); //Agregar la calificación a un array
+            });
+
+            const user_votes_tensor = tf.tensor([user_votes]);//Crear un tensor con las calificaciones
+            const user_feats = tf.matMul(user_votes_tensor, band_feats);
+            const top_user_features = tf.topk(user_feats, features.length);
+            const top_genres = top_user_features.indices.arraySync()[0];
+            const rankedCategories = top_genres.map((v) => features[v]);
+
+            mostrarAlerta(`Tu ranking de géneros musicales preferidos es: ${rankedCategories.join(', ')}`);
+        }
+
+        function mostrarAlerta(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-info mt-5';
+            alertDiv.setAttribute('role', 'alert');
+            alertDiv.textContent = message;
+            document.body.appendChild(alertDiv);
+        }
+
+        mostrarBands();
+    </script>
+</body>
+</html>

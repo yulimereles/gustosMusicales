@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TensorFlow.js Tutorial</title>
+
+  <!-- Import TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+  <!-- Import tfjs-vis -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
+
+  <!-- Import the main script file -->
+  <script src="script.js"></script>
+
+  <script>
+    // Se ejecuta al cargar el DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Hello TensorFlow'); // Muestra un mensaje en la consola
+
+      // Función para obtener los datos del archivo JSON
+      async function getData() {
+        const carsDataResponse = await fetch('https://storage.googleapis.com/tfjs-tutorials/carsData.json');
+        const carsData = await carsDataResponse.json();
+        const cleaned = carsData.map(car => ({
+          mpg: car.Miles_per_Gallon,
+          horsepower: car.Horsepower,
+        }))
+        .filter(car => (car.mpg != null && car.horsepower != null));
+
+        return cleaned;
+      }
+
+      // Función principal que se ejecuta después de obtener los datos
+      async function run() {
+        const data = await getData(); // Obtiene los datos
+        const values = data.map(d => ({ x: d.horsepower, y: d.mpg })); // Prepara los datos para visualización
+
+        // Renderiza un gráfico de dispersión con tfjs-vis
+        tfvis.render.scatterplot(
+          { name: 'Horsepower v MPG' },
+          { values },
+          {
+            xLabel: 'Horsepower',
+            yLabel: 'MPG',
+            height: 300
+          }
+        );
+
+        // Creación del modelo y visualización de su resumen
+        const model = createModel();
+        tfvis.show.modelSummary({ name: 'Model Summary' }, model);
+      }
+
+      // Función para crear el modelo de aprendizaje automático
+      function createModel() {
+        const model = tf.sequential(); // Crea un modelo secuencial
+        model.add(tf.layers.dense({ inputShape: [1], units: 1, useBias: true })); // Agrega una capa de entrada
+        model.add(tf.layers.dense({ units: 1, useBias: true })); // Agrega una capa de salida
+        return model;
+      }
+
+      // Ejecuta la función principal al cargar el DOM
+      run();
+    });
+  </script>
+
+</head>
+
+<body>
+</body>
+</html>
